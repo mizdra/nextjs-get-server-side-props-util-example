@@ -1,6 +1,5 @@
 import { ApolloClient, NormalizedCacheObject } from '@apollo/client';
 import { GetServerSideProps, GetServerSidePropsContext } from 'next';
-import { ParsedUrlQuery } from 'node:querystring';
 
 type TenantName = 'Tenant-A' | 'Tenant-B' | 'Tenant-C';
 
@@ -25,12 +24,9 @@ export type WithTenantOuterPageProps = WithTenantInnerPageProps & { tenantName: 
  * Host ヘッダーからテナント名を取得し、innerGSSP にテナント名を渡す HoF。
  * また、テナント名をコンポーネントから参照できるよう、pageProps に焼き込む。
  */
-function withTenantGSSP<
-  P extends { [key: string]: any } = { [key: string]: any },
-  Q extends ParsedUrlQuery = ParsedUrlQuery,
->(
-  innerGSSP: (context: WithTenantInnerContext) => ReturnType<GetServerSideProps<P & WithTenantInnerPageProps, Q>>,
-): (context: WithTenantOuterContext) => ReturnType<GetServerSideProps<P & WithTenantOuterPageProps, Q>> {
+function withTenantGSSP<P extends { [key: string]: any } = { [key: string]: any }>(
+  innerGSSP: (context: WithTenantInnerContext) => ReturnType<GetServerSideProps<P & WithTenantInnerPageProps>>,
+): (context: WithTenantOuterContext) => ReturnType<GetServerSideProps<P & WithTenantOuterPageProps>> {
   return async (context) => {
     const tenantName = getTenantNameFromHostHeader(context);
     if (tenantName === undefined) throw new Error('Host ヘッダーからテナントの特定に失敗しました。');
@@ -55,12 +51,9 @@ export type WithApolloOuterPageProps = WithApolloInnerPageProps & { initialApoll
  * Apollo クライアントを innerGSSP に渡しつつ、Apollo クライアントのキャッシュを pageProps に焼き込む HoF。
  * 焼きこまれたキャッシュは、_app.tsx で Apollo クライアントを初期化する際に使われる。
  */
-function withApolloGSSP<
-  P extends { [key: string]: any } = { [key: string]: any },
-  Q extends ParsedUrlQuery = ParsedUrlQuery,
->(
-  innerGSSP: (context: WithApolloInnerContext) => ReturnType<GetServerSideProps<P & WithApolloInnerPageProps, Q>>,
-): (context: WithApolloOuterContext) => ReturnType<GetServerSideProps<P & WithApolloOuterPageProps, Q>> {
+function withApolloGSSP<P extends { [key: string]: any } = { [key: string]: any }>(
+  innerGSSP: (context: WithApolloInnerContext) => ReturnType<GetServerSideProps<P & WithApolloInnerPageProps>>,
+): (context: WithApolloOuterContext) => ReturnType<GetServerSideProps<P & WithApolloOuterPageProps>> {
   return async (context) => {
     const apolloClient = createApolloClient(undefined, context.tenantName, context);
     const innerResult = await innerGSSP({ ...context, apolloClient });
@@ -80,11 +73,8 @@ export type WithGlobalInnerContext = WithTenantInnerContext & WithApolloInnerCon
 export type WithGlobalInnerPageProps = WithTenantInnerPageProps & WithApolloInnerPageProps;
 export type WithGlobalOuterPageProps = WithTenantOuterPageProps & WithApolloOuterPageProps;
 /** よく使われる HoF を合成した HoF */
-export function withGlobalGSSP<
-  P extends { [key: string]: any } = { [key: string]: any },
-  Q extends ParsedUrlQuery = ParsedUrlQuery,
->(
-  innerGSSP: (context: WithGlobalInnerContext) => ReturnType<GetServerSideProps<P & WithGlobalInnerPageProps, Q>>,
-): (context: WithGlobalOuterContext) => ReturnType<GetServerSideProps<P & WithGlobalOuterPageProps, Q>> {
+export function withGlobalGSSP<P extends { [key: string]: any } = { [key: string]: any }>(
+  innerGSSP: (context: WithGlobalInnerContext) => ReturnType<GetServerSideProps<P & WithGlobalInnerPageProps>>,
+): (context: WithGlobalOuterContext) => ReturnType<GetServerSideProps<P & WithGlobalOuterPageProps>> {
   return withTenantGSSP(withApolloGSSP(innerGSSP));
 }
