@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "next lint"
   },
+  "prettier": "@mizdra/prettier-config-mizdra",
   "dependencies": {
+    "@apollo/client": "^3.7.10",
     "@types/node": "18.15.11",
     "@types/react": "18.0.31",
     "@types/react-dom": "18.0.11",
@@ -16,5 +18,9 @@
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "typescript": "5.0.2"
+  },
+  "devDependencies": {
+    "@mizdra/prettier-config-mizdra": "^1.0.0",
+    "prettier": "^2.8.7"
   }
 }
